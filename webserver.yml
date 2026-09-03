@@ -1,0 +1,43 @@
+- name: Deploy webserver
+  hosts: webservers
+  become: true
+  tags: deploy
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+    - name: Configure port 8080
+      ansible.builtin.copy:
+        dest: /etc/nginx/sites-available/default
+        content: |
+          server {
+              listen 8080;
+              root /var/www/html;
+          }
+    - name: Create web page
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "Hello World from SJSU-{{ vm_num }}"
+
+    - name: Start nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+
+- name: Undeploy webserver
+  hosts: webservers
+  become: true
+  tags: undeploy
+
+  tasks:
+    - name: Remove nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: absent
+
+    - name: Remove web page
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
